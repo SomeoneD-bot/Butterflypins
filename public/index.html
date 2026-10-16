@@ -1,0 +1,198 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ButterflyPins 🦋</title>
+<style>
+:root {
+  --bg: #100c10;
+  --panel: #1b121b;
+  --pink: #ef91b8;
+  --wine: #76213f;
+  --text: #f8eaf1;
+  --muted: #b9a3b0;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+}
+header {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 22px;
+  background: #100c10f2;
+  border-bottom: 1px solid #38202f;
+}
+.logo { font-size: 22px; font-weight: 900; color: var(--pink); }
+.search {
+  flex: 1; min-width: 60px;
+  padding: 12px 16px; border: 1px solid #493044;
+  border-radius: 30px; background: var(--panel);
+  color: white; outline: none;
+}
+.search:focus { border-color: var(--pink); }
+button {
+  border: 0; cursor: pointer; font-weight: bold;
+  border-radius: 22px; padding: 10px 15px;
+}
+.primary { background: var(--wine); color: white; }
+.primary:hover { background: #983458; }
+nav {
+  display: flex; gap: 10px; overflow-x: auto;
+  padding: 17px 22px;
+}
+nav button { background: #241824; color: var(--muted); white-space: nowrap; }
+nav button.active, nav button:hover { background: var(--wine); color: white; }
+h1 { margin: 8px 22px 5px; font-size: 26px; }
+.subtitle { margin: 0 22px 20px; color: var(--muted); }
+#feed {
+  columns: 5 170px; column-gap: 15px;
+  padding: 0 18px 30px;
+}
+.pin {
+  display: inline-block; width: 100%; break-inside: avoid;
+  margin-bottom: 16px; padding: 8px;
+  background: var(--panel); border: 1px solid #33202f;
+  border-radius: 16px; overflow: hidden;
+}
+.pin img {
+  display: block; width: 100%; border-radius: 11px;
+  object-fit: cover; min-height: 150px;
+}
+.pin h3 { font-size: 14px; margin: 10px 3px 8px; }
+.pin-actions { display: flex; gap: 6px; }
+.pin-actions button { flex: 1; padding: 9px 5px; background: #30202e; color: var(--pink); }
+.pin-actions button.saved { background: var(--wine); color: white; }
+.empty { padding: 25px; color: var(--muted); }
+footer { text-align: center; padding: 25px; color: var(--muted); }
+@media(max-width: 500px) {
+  header { padding: 12px; gap: 8px; flex-wrap: wrap; }
+  .logo { font-size: 19px; }
+  .search { order: 3; flex-basis: 100%; }
+  #feed { columns: 2 130px; padding: 0 10px; gap: 9px; }
+  h1 { font-size: 23px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🦋 ButterflyPins</div>
+  <input id="search" class="search"
+    placeholder="Rechercher des idées, des rêves, des épingles...">
+  <button class="primary" id="myPins">♡ Mes épingles</button>
+</header>
+
+<nav id="categories">
+  <button class="active" data-cat="Tout">Tout</button>
+  <button data-cat="Emo">Emo 2000s</button>
+  <button data-cat="Mode">Mode</button>
+  <button data-cat="Art">Art & dessins</button>
+  <button data-cat="Citation">Citations</button>
+  <button data-cat="Décoration">Décoration</button>
+</nav>
+
+<h1 id="heading">Un monde à toi. 🥀</h1>
+<p class="subtitle">Des images pour les âmes qui ressentent trop.</p>
+<main id="feed"></main>
+<footer>ButterflyPins 🦋 · made of dreams &amp; midnight thoughts</footer>
+
+<script>
+const pins = [
+  {id:1,title:"Dark romantic",cat:"Emo",color:"photo-1515886657613-9f3515b0c78f",tags:"emo noir tenue mode"},
+  {id:2,title:"Fleurs dans la nuit",cat:"Art",color:"photo-1490750967868-88aa4486c946",tags:"fleurs rose art dessin"},
+  {id:3,title:"Pink dreams",cat:"Décoration",color:"photo-1494438639946-1ebd1d20bf85",tags:"rose chambre décoration"},
+  {id:4,title:"Un autre monde",cat:"Citation",color:"photo-1470770841072-f978cf4d019e",tags:"citation ciel rêve nature"},
+  {id:5,title:"Vintage mood",cat:"Mode",color:"photo-1529139574466-a303027c1d8b",tags:"mode vintage emo"},
+  {id:6,title:"Nuit étoilée",cat:"Art",color:"photo-1519681393784-d120267933ba",tags:"étoiles nuit art"},
+  {id:7,title:"Romantic roses",cat:"Décoration",color:"photo-1518895949257-7621c3c786d7",tags:"rose fleurs romantique"},
+  {id:8,title:"Soft grunge",cat:"Emo",color:"photo-1524504388940-b1c1722653e1",tags:"emo grunge mode"},
+  {id:9,title:"Petits bonheurs",cat:"Citation",color:"photo-1470252649378-9c29740c9fa8",tags:"soleil citation nature"},
+  {id:10,title:"Fashion diary",cat:"Mode",color:"photo-1525507119028-ed4c629a60a3",tags:"mode outfit vêtements"},
+  {id:11,title:"Jardin secret",cat:"Décoration",color:"photo-1441974231531-c6227db76b6e",tags:"forêt nature décoration"},
+  {id:12,title:"Art in bloom",cat:"Art",color:"photo-1513364776144-60967b0f800f",tags:"art peinture couleurs"}
+].map(p=>({...p,url:`https://images.unsplash.com/${p.color}?auto=format&fit=crop&w=600&q=80`}));
+
+let category = "Tout";
+let saved = JSON.parse(localStorage.getItem("bp-saved") || "[]");
+let liked = JSON.parse(localStorage.getItem("bp-liked") || "[]");
+let onlySaved = false;
+
+const feed = document.getElementById("feed");
+const search = document.getElementById("search");
+
+function render() {
+  const q = search.value.toLowerCase().trim();
+  const shown = pins.filter(p =>
+    (category === "Tout" || p.cat === category) &&
+    (!onlySaved || saved.includes(p.id)) &&
+    (!q || `${p.title} ${p.cat} ${p.tags}`.toLowerCase().includes(q))
+  );
+
+  feed.innerHTML = "";
+  if (!shown.length) {
+    feed.innerHTML = '<p class="empty">Aucune épingle trouvée. Essaie un autre mot. 🥀</p>';
+    return;
+  }
+
+  shown.forEach(p => {
+    const card = document.createElement("article");
+    card.className = "pin";
+    const img = document.createElement("img");
+    img.src = p.url;
+    img.alt = p.title;
+    img.loading = "lazy";
+    img.onerror = () => { img.alt = "Image indisponible"; };
+    const title = document.createElement("h3");
+    title.textContent = p.title;
+    const actions = document.createElement("div");
+    actions.className = "pin-actions";
+
+    const like = document.createElement("button");
+    like.textContent = liked.includes(p.id) ? "♥ Aimé" : "♡ J'aime";
+    like.onclick = () => {
+      liked = liked.includes(p.id) ? liked.filter(id=>id!==p.id) : [...liked,p.id];
+      localStorage.setItem("bp-liked",JSON.stringify(liked));
+      render();
+    };
+
+    const save = document.createElement("button");
+    save.className = saved.includes(p.id) ? "saved" : "";
+    save.textContent = saved.includes(p.id) ? "✓ Enregistré" : "+ Enregistrer";
+    save.onclick = () => {
+      saved = saved.includes(p.id) ? saved.filter(id=>id!==p.id) : [...saved,p.id];
+      localStorage.setItem("bp-saved",JSON.stringify(saved));
+      render();
+    };
+
+    actions.append(like,save);
+    card.append(img,title,actions);
+    feed.append(card);
+  });
+}
+
+document.querySelectorAll("#categories button").forEach(btn=>{
+  btn.onclick=()=>{
+    category=btn.dataset.cat;
+    document.querySelectorAll("#categories button").forEach(b=>b.classList.toggle("active",b===btn));
+    document.getElementById("heading").textContent =
+      category==="Tout" ? "Un monde à toi. 🥀" : category;
+    onlySaved=false;
+    document.getElementById("myPins").textContent="♡ Mes épingles";
+    render();
+  };
+});
+search.addEventListener("input",render);
+document.getElementById("myPins").onclick=()=>{
+  onlySaved=!onlySaved;
+  document.getElementById("myPins").textContent=onlySaved?"← Toutes les épingles":"♡ Mes épingles";
+  render();
+};
+render();
+</script>
+</body>
+</html>
